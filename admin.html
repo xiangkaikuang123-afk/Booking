@@ -1,0 +1,65 @@
+<!doctype html>
+const pwd = document.getElementById('pwd').value;
+auth.signInWithEmailAndPassword(email, pwd).catch(e => alert('Login failed: '+e.message));
+});
+}
+
+
+function renderAdmin(user) {
+authArea.innerHTML = `
+<span class="mr-4">${user.email}</span>
+<button id="logoutBtn" class="px-3 py-1 border rounded">Logout</button>
+`;
+document.getElementById('logoutBtn').addEventListener('click', () => auth.signOut());
+
+
+content.innerHTML = `<div id="list">Loading bookings...</div>`;
+
+
+db.collection('bookings').orderBy('createdAt','desc').onSnapshot(snap => {
+const list = document.getElementById('list');
+if (!snap.size) { list.innerHTML = '<p class="text-sm text-gray-600">No bookings yet.</p>'; return; }
+let html = `<table class="w-full text-sm border-collapse"><thead><tr class="text-left"><th>Time</th><th>Name</th><th>Type</th><th>CertNo</th><th>Date</th><th>Time</th><th>Phone</th><th>Status</th><th>Action</th></tr></thead><tbody>`;
+snap.forEach(doc => {
+const b = doc.data();
+const id = doc.id;
+const created = b.createdAt && b.createdAt.toDate ? b.createdAt.toDate().toLocaleString() : '';
+html += `<tr class="border-t"><td>${created}</td><td>${b.fullName}</td><td>${b.certType}</td><td>${b.certNo||''}</td><td>${b.preferredDate}</td><td>${b.preferredTime||''}</td><td>${b.phone}</td><td id="status-${id}">${b.status}</td><td>
+<select id="sel-${id}"><option>Pending</option><option>Ready</option><option>Collected</option></select>
+<button data-id="${id}" class="updateBtn ml-2 px-2 py-1 border rounded">Save</button>
+</td></tr>`;
+});
+html += `</tbody></table>`;
+list.innerHTML = html;
+
+
+// set selects and attach handlers
+snap.forEach(doc => {
+const id = doc.id;
+const status = doc.data().status || 'Pending';
+const sel = document.getElementById('sel-'+id);
+if (sel) sel.value = status;
+});
+
+
+document.querySelectorAll('.updateBtn').forEach(btn => {
+btn.onclick = async (ev) => {
+const id = ev.currentTarget.dataset.id;
+const sel = document.getElementById('sel-'+id);
+const newStatus = sel.value;
+await db.collection('bookings').doc(id).update({ status: newStatus });
+document.getElementById('status-'+id).textContent = newStatus;
+alert('Updated');
+}
+});
+});
+}
+
+
+auth.onAuthStateChanged(u => {
+if (u) renderAdmin(u);
+else renderLogin();
+});
+</script>
+</body>
+</html>
