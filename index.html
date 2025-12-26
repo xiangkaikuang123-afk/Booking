@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Appointment Booking</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #f5f7fa;
+        margin: 0;
+        padding: 0;
+    }
+
+    .container {
+        max-width: 900px;
+        margin: 50px auto;
+        background: #fff;
+        padding: 30px 40px;
+        border-radius: 12px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+        text-align: center;
+        color: #2c3e50;
+        margin-bottom: 30px;
+    }
+
+    h5 {
+        color: #3498db;
+        margin-top: 30px;
+        margin-bottom: 15px;
+    }
+
+    .form-row {
+        display: flex;
+        flex-wrap: wrap;
+        margin-bottom: 15px;
+    }
+
+    .form-group {
+        flex: 1;
+        min-width: 200px;
+        padding: 0 10px;
+        margin-bottom: 15px;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+        color: #34495e;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"],
+    select {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        box-sizing: border-box;
+        font-size: 14px;
+        transition: border-color 0.3s;
+    }
+
+    input[type="text"]:focus,
+    input[type="email"]:focus,
+    input[type="tel"]:focus,
+    select:focus {
+        border-color: #3498db;
+        outline: none;
+    }
+
+    button {
+        background: #3498db;
+        color: #fff;
+        border: none;
+        padding: 12px 20px;
+        font-size: 16px;
+        font-weight: bold;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background 0.3s;
+        width: 100%;
+    }
+
+    button:hover {
+        background: #2980b9;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+    }
+
+    th, td {
+        padding: 8px;
+        text-align: center;
+        border: 1px solid #ccc;
+        cursor: pointer;
+    }
+
+    th {
+        background: #3498db;
+        color: white;
+    }
+
+    td:hover {
+        background: #d6eaf8;
+    }
+
+    td.selected {
+        background: #2980b9;
+        color: white;
+    }
+
+    @media (max-width: 768px) {
+        .form-group {
+            flex: 100%;
+            padding: 0;
+        }
+    }
+</style>
+</head>
+<body>
+<div class="container">
+    <h2>Appointment Booking</h2>
+    <form id="appointmentForm" method="POST" action="#">
+        <h5>Name and Contact</h5>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="name">Name</label>
+                <input type="text" id="name" name="name" placeholder="Your Name" required>
+            </div>
+            <div class="form-group">
+                <label for="countryCode">Country Code</label>
+                <input type="text" id="countryCode" name="countryCode" placeholder="+60" required>
+            </div>
+            <div class="form-group">
+                <label for="phone">Mobile Number</label>
+                <input type="tel" id="phone" name="phone" placeholder="0123456789" required pattern="0[0-9]{7,14}">
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" placeholder="you@example.com" required>
+            </div>
+        </div>
+
+        <h5>Service</h5>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="location">Location</label>
+                <select id="location" name="location">
+                    <option value="N3" selected>N3</option>
+                    <option value="N2">N2</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="service">Service</label>
+                <select id="service" name="service">
+                    <option value="Certificate Collect" selected>Certificate Collect</option>
+                    <option value="Other Service 1">Other Service 1</option>
+                    <option value="Other Service 2">Other Service 2</option>
+                </select>
+            </div>
+        </div>
+
+        <h5>Appointment Date</h5>
+        <div class="form-row">
+            <div class="form-group">
+                <table id="calendar">
+                    <thead>
+                        <tr>
+                            <th>Sun</th>
+                            <th>Mon</th>
+                            <th>Tue</th>
+                            <th>Wed</th>
+                            <th>Thu</th>
+                            <th>Fri</th>
+                            <th>Sat</th>
+                        </tr>
+                    </thead>
+                    <tbody id="calendarBody">
+                        <!-- Calendar dates generated by JS -->
+                    </tbody>
+                </table>
+                <input type="hidden" name="appointmentDate" id="appointmentDate">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <button type="submit">Book Appointment</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Calendar generation
+    const calendarBody = document.getElementById('calendarBody');
+    const appointmentDateInput = document.getElementById('appointmentDate');
+
+    function generateCalendar() {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = today.getMonth();
+        const firstDay = new Date(year, month, 1).getDay();
+        const lastDate = new Date(year, month + 1, 0).getDate();
+
+        let date = 1;
+        calendarBody.innerHTML = '';
+
+        for (let i = 0; i < 6; i++) {
+            let row = document.createElement('tr');
+
+            for (let j = 0; j < 7; j++) {
+                let cell = document.createElement('td');
+                if (i === 0 && j < firstDay) {
+                    cell.innerHTML = '';
+                } else if (date > lastDate) {
+                    cell.innerHTML = '';
+                } else {
+                    cell.innerHTML = date;
+                    cell.addEventListener('click', () => {
+                        // remove previous selection
+                        document.querySelectorAll('#calendar td.selected').forEach(td => td.classList.remove('selected'));
+                        cell.classList.add('selected');
+                        appointmentDateInput.value = `${year}-${String(month+1).padStart(2,'0')}-${String(date).padStart(2,'0')}`;
+                    });
+                    date++;
+                }
+                row.appendChild(cell);
+            }
+            calendarBody.appendChild(row);
+        }
+    }
+
+    generateCalendar();
+</script>
+</body>
+</html>
